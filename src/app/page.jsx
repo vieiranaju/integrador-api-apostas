@@ -6,13 +6,11 @@ import { apiClient, saveToken, getToken, clearToken } from '@/lib/api-client';
 export default function Page() {
   const [activeTab, setActiveTab] = useState('apostadores');
   
-  // Estados de autenticação global
-  const [autenticado, setAutenticado] = useState(null); // null = verificando
+  const [autenticado, setAutenticado] = useState(null);
   const [loginForm, setLoginForm] = useState({ usuario: '', senha: '' });
   const [loginErro, setLoginErro] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  // Ao montar, verifica se já está autenticado
   useEffect(() => {
     const token = getToken();
     if (!token) {
@@ -20,7 +18,6 @@ export default function Page() {
       return;
     }
     
-    // Verifica status da sessão no integrador
     apiClient('/auth/status')
       .then(d => setAutenticado(!!d.sessaoAtiva))
       .catch(() => {
@@ -34,8 +31,6 @@ export default function Page() {
     setLoginLoading(true);
     setLoginErro('');
     try {
-      // Usa o mesmo usuário/senha para o integrador e para todas as APIs externas.
-      // O integrador tentará registrar automaticamente se o usuário não existir.
       const payload = {
         usuario: loginForm.usuario,
         senha: loginForm.senha,
@@ -72,7 +67,6 @@ export default function Page() {
     setAutenticado(false);
   };
 
-  // ── Verificando autenticação inicial ──
   if (autenticado === null) {
     return (
       <div className="login-wrapper">
@@ -81,7 +75,6 @@ export default function Page() {
     );
   }
 
-  // ── Tela de Login Global ──
   if (!autenticado) {
     return (
       <>
@@ -170,9 +163,6 @@ export default function Page() {
   );
 }
 
-// ----------------------------------------------------
-// APOSTADORES PANEL
-// ----------------------------------------------------
 function ApostadoresPanel() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -261,9 +251,6 @@ function ApostadoresPanel() {
   );
 }
 
-// ----------------------------------------------------
-// LUTADORES PANEL
-// ----------------------------------------------------
 function LutadoresPanel() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -384,9 +371,6 @@ function LutadoresPanel() {
   );
 }
 
-// ----------------------------------------------------
-// LUTAS PANEL
-// ----------------------------------------------------
 function LutasPanel() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -480,9 +464,6 @@ function LutasPanel() {
   );
 }
 
-// ----------------------------------------------------
-// APOSTAS PANEL
-// ----------------------------------------------------
 function ApostasPanel() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
