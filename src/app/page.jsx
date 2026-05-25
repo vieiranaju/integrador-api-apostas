@@ -167,6 +167,7 @@ function ApostadoresPanel() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editInfo, setEditInfo] = useState(null);
   const [formData, setFormData] = useState({ nome: '', idade: '', chave_pix: '' });
 
   const loadData = () => {
@@ -178,19 +179,43 @@ function ApostadoresPanel() {
 
   useEffect(() => { loadData(); }, []);
 
+  const openNew = () => {
+    setEditInfo(null);
+    setFormData({ nome: '', idade: '', chave_pix: '' });
+    setModalOpen(true);
+  };
+
+  const openEdit = (item) => {
+    setEditInfo({ id: item.id, instancia: item._instancia });
+    setFormData({
+      nome: item.nome || '',
+      idade: item.idade || '',
+      chave_pix: item.chave_pix || item.chavePix || ''
+    });
+    setModalOpen(true);
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
-    await apiClient('/apostadores', {
-      method: 'POST',
-      body: JSON.stringify({ ...formData, idade: Number(formData.idade) })
-    });
+    const bodyObj = { ...formData, idade: Number(formData.idade) };
+    
+    if (editInfo) {
+      await apiClient(`/apostadores/${editInfo.id}?instancia=${editInfo.instancia || 1}`, {
+        method: 'PUT',
+        body: JSON.stringify(bodyObj)
+      });
+    } else {
+      await apiClient('/apostadores', {
+        method: 'POST',
+        body: JSON.stringify(bodyObj)
+      });
+    }
     setModalOpen(false);
-    setFormData({ nome: '', idade: '', chave_pix: '' });
     loadData();
   };
 
   const handleDelete = async (id, instancia) => {
-    if(confirm('Tem certeza?')) {
+    if(confirm('Tem certeza que deseja excluir?')) {
       await apiClient(`/apostadores/${id}?instancia=${instancia || 1}`, { method: 'DELETE' });
       loadData();
     }
@@ -198,7 +223,7 @@ function ApostadoresPanel() {
 
   return (
     <div className="panel">
-      <h2>Apostadores <button className="btn" onClick={() => setModalOpen(true)}>+ Novo</button></h2>
+      <h2>Apostadores <button className="btn" onClick={openNew}>+ Novo</button></h2>
       {loading ? <div className="loading">Carregando...</div> : (
         <div className="table-wrapper">
           <table>
@@ -212,6 +237,7 @@ function ApostadoresPanel() {
                   <td>{item.chave_pix || item.chavePix}</td>
                   <td>I{item._instancia}</td>
                   <td className="actions">
+                    <button className="btn" style={{marginRight: '8px'}} onClick={() => openEdit(item)}>Editar</button>
                     <button className="btn danger" onClick={() => handleDelete(item.id, item._instancia)}>Excluir</button>
                   </td>
                 </tr>
@@ -225,7 +251,7 @@ function ApostadoresPanel() {
       {modalOpen && (
         <div className="modal-overlay">
           <div className="modal">
-            <h3>Novo Apostador</h3>
+            <h3>{editInfo ? 'Editar Apostador' : 'Novo Apostador'}</h3>
             <form onSubmit={handleSave}>
               <div className="form-group">
                 <label>Nome</label>
@@ -256,6 +282,7 @@ function LutadoresPanel() {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [editInfo, setEditInfo] = useState(null);
   const [formData, setFormData] = useState({ nome: '', apelido: '', peso: '', categoria: '1', arte: '1' });
 
   const loadData = () => {
@@ -272,22 +299,48 @@ function LutadoresPanel() {
 
   useEffect(() => { loadData(); }, []);
 
+  const openNew = () => {
+    setEditInfo(null);
+    setFormData({ nome: '', apelido: '', peso: '', categoria: '1', arte: '1' });
+    setModalOpen(true);
+  };
+
+  const openEdit = (item) => {
+    setEditInfo({ id: item.id, instancia: item._instancia });
+    setFormData({
+      nome: item.nome || '',
+      apelido: item.apelido || '',
+      peso: item.peso || '',
+      categoria: item.categoria || '1',
+      arte: item.arte || '1'
+    });
+    setModalOpen(true);
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
-    await apiClient('/lutadores', {
-      method: 'POST',
-      body: JSON.stringify({
-        ...formData,
-        peso: formData.peso ? Number(formData.peso) : 80.0
-      })
-    });
+    const bodyObj = {
+      ...formData,
+      peso: formData.peso ? Number(formData.peso) : 80.0
+    };
+
+    if (editInfo) {
+      await apiClient(`/lutadores/${editInfo.id}?instancia=${editInfo.instancia || 1}`, {
+        method: 'PUT',
+        body: JSON.stringify(bodyObj)
+      });
+    } else {
+      await apiClient('/lutadores', {
+        method: 'POST',
+        body: JSON.stringify(bodyObj)
+      });
+    }
     setModalOpen(false);
-    setFormData({ nome: '', apelido: '', peso: '', categoria: '1', arte: '1' });
     loadData();
   };
 
   const handleDelete = async (id, instancia) => {
-    if(confirm('Tem certeza?')) {
+    if(confirm('Tem certeza que deseja excluir?')) {
       await apiClient(`/lutadores/${id}?instancia=${instancia || 1}`, { method: 'DELETE' });
       loadData();
     }
@@ -295,7 +348,7 @@ function LutadoresPanel() {
 
   return (
     <div className="panel">
-      <h2>Lutadores <button className="btn" onClick={() => setModalOpen(true)}>+ Novo</button></h2>
+      <h2>Lutadores <button className="btn" onClick={openNew}>+ Novo</button></h2>
 
       {loading ? (
         <div className="loading">Carregando...</div>
@@ -320,6 +373,7 @@ function LutadoresPanel() {
                   <td>{item.arte || '-'}</td>
                   <td>I{item._instancia}</td>
                   <td className="actions">
+                    <button className="btn" style={{marginRight: '8px'}} onClick={() => openEdit(item)}>Editar</button>
                     <button className="btn danger" onClick={() => handleDelete(item.id, item._instancia)}>Excluir</button>
                   </td>
                 </tr>
@@ -333,7 +387,7 @@ function LutadoresPanel() {
       {modalOpen && (
         <div className="modal-overlay">
           <div className="modal">
-            <h3>Novo Lutador</h3>
+            <h3>{editInfo ? 'Editar Lutador' : 'Novo Lutador'}</h3>
             <form onSubmit={handleSave}>
               <div className="form-group">
                 <label>Nome</label>
@@ -375,6 +429,7 @@ function LutasPanel() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editInfo, setEditInfo] = useState(null);
   const [formData, setFormData] = useState({ horario: '20:00:00', data: '2025-06-15', lutador1: '', lutador2: '' });
 
   const loadData = () => {
@@ -386,19 +441,44 @@ function LutasPanel() {
 
   useEffect(() => { loadData(); }, []);
 
+  const openNew = () => {
+    setEditInfo(null);
+    setFormData({ horario: '20:00:00', data: '2025-06-15', lutador1: '', lutador2: '' });
+    setModalOpen(true);
+  };
+
+  const openEdit = (item) => {
+    setEditInfo({ id: item.id, instancia: item._instancia });
+    setFormData({
+      horario: item.horario || '20:00:00',
+      data: item.data || '2025-06-15',
+      lutador1: item.lutador1 || '',
+      lutador2: item.lutador2 || ''
+    });
+    setModalOpen(true);
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
-    await apiClient('/lutas', {
-      method: 'POST',
-      body: JSON.stringify({ ...formData, lutador1: Number(formData.lutador1), lutador2: Number(formData.lutador2) })
-    });
+    const bodyObj = { ...formData, lutador1: Number(formData.lutador1), lutador2: Number(formData.lutador2) };
+    
+    if (editInfo) {
+      await apiClient(`/lutas/${editInfo.id}?instancia=${editInfo.instancia || 1}`, {
+        method: 'PUT',
+        body: JSON.stringify(bodyObj)
+      });
+    } else {
+      await apiClient('/lutas', {
+        method: 'POST',
+        body: JSON.stringify(bodyObj)
+      });
+    }
     setModalOpen(false);
-    setFormData({ horario: '20:00:00', data: '2025-06-15', lutador1: '', lutador2: '' });
     loadData();
   };
 
   const handleDelete = async (id, instancia) => {
-    if(confirm('Tem certeza?')) {
+    if(confirm('Tem certeza que deseja excluir?')) {
       await apiClient(`/lutas/${id}?instancia=${instancia || 1}`, { method: 'DELETE' });
       loadData();
     }
@@ -406,7 +486,7 @@ function LutasPanel() {
 
   return (
     <div className="panel">
-      <h2>Lutas <button className="btn" onClick={() => setModalOpen(true)}>+ Nova</button></h2>
+      <h2>Lutas <button className="btn" onClick={openNew}>+ Nova</button></h2>
       {loading ? <div className="loading">Carregando...</div> : (
         <div className="table-wrapper">
           <table>
@@ -421,6 +501,7 @@ function LutasPanel() {
                   <td>ID: {item.lutador2}</td>
                   <td>I{item._instancia}</td>
                   <td className="actions">
+                    <button className="btn" style={{marginRight: '8px'}} onClick={() => openEdit(item)}>Editar</button>
                     <button className="btn danger" onClick={() => handleDelete(item.id, item._instancia)}>Excluir</button>
                   </td>
                 </tr>
@@ -434,7 +515,7 @@ function LutasPanel() {
       {modalOpen && (
         <div className="modal-overlay">
           <div className="modal">
-            <h3>Nova Luta</h3>
+            <h3>{editInfo ? 'Editar Luta' : 'Nova Luta'}</h3>
             <form onSubmit={handleSave}>
               <div className="form-group">
                 <label>Data</label>
@@ -468,6 +549,7 @@ function ApostasPanel() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editInfo, setEditInfo] = useState(null);
   const [formData, setFormData] = useState({ valor: '', id_luta: '', id_lutador: '', id_apostador: '' });
 
   const loadData = () => {
@@ -479,24 +561,49 @@ function ApostasPanel() {
 
   useEffect(() => { loadData(); }, []);
 
+  const openNew = () => {
+    setEditInfo(null);
+    setFormData({ valor: '', id_luta: '', id_lutador: '', id_apostador: '' });
+    setModalOpen(true);
+  };
+
+  const openEdit = (item) => {
+    setEditInfo({ id: item.id, instancia: item._instancia });
+    setFormData({
+      valor: item.valor || '',
+      id_luta: item.id_luta || '',
+      id_lutador: item.id_lutador || '',
+      id_apostador: item.id_apostador || ''
+    });
+    setModalOpen(true);
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
-    await apiClient('/apostas', {
-      method: 'POST',
-      body: JSON.stringify({ 
-        valor: Number(formData.valor), 
-        id_luta: Number(formData.id_luta), 
-        id_lutador: Number(formData.id_lutador), 
-        id_apostador: Number(formData.id_apostador) 
-      })
-    });
+    const bodyObj = { 
+      valor: Number(formData.valor), 
+      id_luta: Number(formData.id_luta), 
+      id_lutador: Number(formData.id_lutador), 
+      id_apostador: Number(formData.id_apostador) 
+    };
+    
+    if (editInfo) {
+      await apiClient(`/apostas/${editInfo.id}?instancia=${editInfo.instancia || 1}`, {
+        method: 'PUT',
+        body: JSON.stringify(bodyObj)
+      });
+    } else {
+      await apiClient('/apostas', {
+        method: 'POST',
+        body: JSON.stringify(bodyObj)
+      });
+    }
     setModalOpen(false);
-    setFormData({ valor: '', id_luta: '', id_lutador: '', id_apostador: '' });
     loadData();
   };
 
   const handleDelete = async (id, instancia) => {
-    if(confirm('Tem certeza?')) {
+    if(confirm('Tem certeza que deseja excluir?')) {
       await apiClient(`/apostas/${id}?instancia=${instancia || 1}`, { method: 'DELETE' });
       loadData();
     }
@@ -504,7 +611,7 @@ function ApostasPanel() {
 
   return (
     <div className="panel">
-      <h2>Apostas <button className="btn" onClick={() => setModalOpen(true)}>+ Nova</button></h2>
+      <h2>Apostas <button className="btn" onClick={openNew}>+ Nova</button></h2>
       {loading ? <div className="loading">Carregando...</div> : (
         <div className="table-wrapper">
           <table>
@@ -519,6 +626,7 @@ function ApostasPanel() {
                   <td>ID: {item.id_lutador || '-'}</td>
                   <td>I{item._instancia}</td>
                   <td className="actions">
+                    <button className="btn" style={{marginRight: '8px'}} onClick={() => openEdit(item)}>Editar</button>
                     <button className="btn danger" onClick={() => handleDelete(item.id, item._instancia)}>Excluir</button>
                   </td>
                 </tr>
@@ -532,7 +640,7 @@ function ApostasPanel() {
       {modalOpen && (
         <div className="modal-overlay">
           <div className="modal">
-            <h3>Nova Aposta</h3>
+            <h3>{editInfo ? 'Editar Aposta' : 'Nova Aposta'}</h3>
             <form onSubmit={handleSave}>
               <div className="form-group">
                 <label>Valor (R$)</label>
